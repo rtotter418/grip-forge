@@ -170,15 +170,12 @@ function buildGrip(p) {
   const top = { w:p.wTop, d:p.dTop, type:p.typeTop, param:p.paramTop, so:p.soTop };
 
   function outerAt(z) {
-    // ── No-taper mode: single segment guard→pommel ────────────────────────────
+    // ── No-taper: single loft guard→pommel, one sine-bell bulge full length ──
     if (p.noTaper) {
-      const t = totalLen > 0 ? z / totalLen : 0;
-      let w = bot.w + (top.w - bot.w) * t;
-      let d = bot.d + (top.d - bot.d) * t;
-      // Each bulge applies to its half of the grip
-      const bulge  = t < 0.5 ? p.bulgeBef : p.bulgeAft;
-      const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
-      const bw = bulge * Math.sin(Math.PI * localT);
+      const t  = totalLen > 0 ? z / totalLen : 0;
+      let w    = bot.w + (top.w - bot.w) * t;
+      let d    = bot.d + (top.d - bot.d) * t;
+      const bw = p.bulgeBef * Math.sin(Math.PI * t);
       const bd = (bot.d > 0 && bot.w > 0) ? bw * (bot.d / bot.w) : bw;
       w += bw; d += bd;
       const so    = bot.so    + (top.so    - bot.so   ) * t;
@@ -213,8 +210,7 @@ function buildGrip(p) {
     return { w, d, so, prof };
   }
 
-  // Inner hole: always 3-point (guard → mid → pommel).
-  // lBef is the midpoint anchor — in no-taper mode the frontend sets this to totalLen/2.
+  // Inner hole: always 3-point. lBef is the midpoint anchor.
   function innerAt(z) {
     const t = z<=p.lBef ? (p.lBef>0?z/p.lBef:0) : (p.lAft>0?(z-p.lBef)/p.lAft:1);
     if (z<=p.lBef) return [p.hwB+(p.hwM-p.hwB)*t, p.hdB+(p.hdM-p.hdB)*t];
@@ -258,13 +254,11 @@ function buildGrip(p) {
   return { tris, clamped };
 }
 
-// ── Normal helpers ────────────────────────────────────────────────────────────
 function vsub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
 function vcross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
 function vnorm(v){const l=Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);return l>1e-10?[v[0]/l,v[1]/l,v[2]/l]:[0,0,1];}
 function fnorm(t){return vnorm(vcross(vsub(t[1],t[0]),vsub(t[2],t[0])));}
 
-// ── Binary STL serialiser ─────────────────────────────────────────────────────
 function toSTL(tris) {
   const buf = Buffer.alloc(84 + tris.length * 50);
   buf.write('GRIP FORGE', 0, 'ascii');
@@ -272,10 +266,10 @@ function toSTL(tris) {
   let off = 84;
   for (const t of tris) {
     const n = fnorm(t);
-    buf.writeFloatLE(n[0], off);   buf.writeFloatLE(n[1], off+4); buf.writeFloatLE(n[2], off+8);
+    buf.writeFloatLE(n[0], off); buf.writeFloatLE(n[1], off+4); buf.writeFloatLE(n[2], off+8);
     off += 12;
     for (const v of t) {
-      buf.writeFloatLE(v[0], off);   buf.writeFloatLE(v[1], off+4); buf.writeFloatLE(v[2], off+8);
+      buf.writeFloatLE(v[0], off); buf.writeFloatLE(v[1], off+4); buf.writeFloatLE(v[2], off+8);
       off += 12;
     }
     buf.writeUInt16LE(0, off); off += 2;
@@ -283,7 +277,6 @@ function toSTL(tris) {
   return buf;
 }
 
-// ── Serverless handler ────────────────────────────────────────────────────────
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -297,13 +290,10 @@ export default function handler(req, res) {
     check(p.lBef > 0 && p.lAft > 0,  'Length segments must be > 0');
     check(p.wBot > 0 && p.dBot > 0,  'Guard dimensions must be > 0');
     check(p.wTop > 0 && p.dTop > 0,  'Pommel dimensions must be > 0');
-    if (!p.noTaper) {
-      check(p.wTap > 0 && p.dTap > 0, 'Mid dimensions must be > 0');
-    }
+    if (!p.noTaper) check(p.wTap > 0 && p.dTap > 0, 'Mid dimensions must be > 0');
 
     const { tris, clamped } = buildGrip(p);
     const stl = toSTL(tris);
-
     const totalLen = (p.lBef + p.lAft).toFixed(0);
     res.setHeader('Content-Type',        'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="grip_${totalLen}mm.stl"`);
