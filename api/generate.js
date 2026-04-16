@@ -282,7 +282,13 @@ export default function handler(req, res) {
     res.setHeader('Content-Disposition', `attachment; filename="grip_${totalLen}mm.stl"`);
     res.setHeader('X-Triangle-Count',    String(tris.length));
     res.setHeader('X-Hole-Clamped',      String(clamped));
-    res.status(200).send(stl);
+    import zlib from 'zlib';
+    zlib.gzip(stl, (err, compressed) => {
+      if (err) { res.status(500).json({ error: 'compression failed' }); return; }
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Content-Length', compressed.length);
+      res.status(200).send(compressed);
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
