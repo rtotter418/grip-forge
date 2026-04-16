@@ -1,6 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  GRIP FORGE  —  Geometry Engine  (server-side only)
-//  This file is never delivered to the browser.
+//  GRIP FORGE  —  Geometry Engine
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PROF_PTS = 48;
