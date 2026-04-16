@@ -38,7 +38,6 @@ body{display:flex;background-image:linear-gradient(var(--grid) 1px,transparent 1
 .row label{font-size:10px;color:var(--text2);letter-spacing:.03em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .unit{font-size:9px;color:var(--text3);width:14px;text-align:right;flex-shrink:0;}
 .total-hint{font-size:9px;color:var(--text3);margin-top:-2px;margin-bottom:4px;letter-spacing:.03em;}
-.total-hint span{color:var(--text2);}
 
 input[type="number"]{width:68px;flex-shrink:0;background:rgba(0,0,0,.3);border:1px solid var(--border);border-top-color:rgba(0,0,0,.6);color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;padding:3px 8px;text-align:right;outline:none;transition:border-color .15s,box-shadow .15s;-moz-appearance:textfield;appearance:textfield;}
 input[type="number"]:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,204,255,.12);}
@@ -69,19 +68,17 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
 .type-btn[data-t="se"]{border-color:var(--accent);color:var(--accent);background:var(--accent-a);}
 .type-btn[data-t="hx"]{border-color:var(--orange);color:var(--orange);background:var(--orange-a);}
 
-/* Taper toggle */
+/* Taper toggle row — scoped so only .taper-label gets flex:1, not the toggle itself */
 .taper-toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.taper-toggle-row label{font-size:10px;color:var(--text2);flex:1;}
-.toggle-wrap{position:relative;width:32px;height:18px;flex-shrink:0;}
+.taper-label{font-size:10px;color:var(--text2);flex:1;}
+
+/* Toggle switch */
+.toggle-wrap{position:relative;width:32px;height:18px;flex-shrink:0;cursor:pointer;}
 .toggle-wrap input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:9px;cursor:pointer;transition:background .2s;}
+.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:9px;transition:background .2s;}
 .toggle-wrap input:checked + .toggle-track{background:var(--accent);}
 .toggle-track::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;}
 .toggle-wrap input:checked + .toggle-track::after{transform:translateX(14px);}
-
-/* Taper-only block (hidden when no-taper) */
-#taper-outer-block{transition:opacity .2s;}
-#taper-pct-block{transition:opacity .2s;}
 
 .btn-group{padding:10px 14px 14px;display:flex;flex-direction:column;gap:7px;}
 .btn{width:100%;padding:9px 0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid;transition:all .18s;background:transparent;display:flex;align-items:center;justify-content:center;gap:7px;}
@@ -124,22 +121,17 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
     <!-- ── OUTER PROFILE ─────────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">Outer profile</div>
-
-      <!-- column headers — mid col gets dimmed when taper off -->
       <div id="outer-hdr" class="hole-hdr" style="grid-template-columns:52px 1fr 1fr 1fr">
-        <span></span>
-        <span>Guard</span>
-        <span class="mid-col">Mid</span>
-        <span>Pommel</span>
+        <span></span><span>Guard</span><span class="mid-col">Mid</span><span>Pommel</span>
       </div>
       <div id="outer-w-row" class="hole-row" style="grid-template-columns:52px 1fr 1fr 1fr">
-        <label>Width<span class="tip" tabindex="0" data-tip="Controls the overall width of the grip (mm).">?</span></label>
+        <label>Width<span class="tip" tabindex="0" data-tip="Overall width of the grip (mm).">?</span></label>
         <input type="number" id="wBot" value="30" min="1" step="0.5">
         <input type="number" id="wTap" value="35" min="1" step="0.5" class="mid-col">
         <input type="number" id="wTop" value="20" min="1" step="0.5">
       </div>
       <div id="outer-d-row" class="hole-row" style="grid-template-columns:52px 1fr 1fr 1fr">
-        <label>Depth<span class="tip" tabindex="0" data-tip="Controls the thickness of the grip (mm).">?</span></label>
+        <label>Depth<span class="tip" tabindex="0" data-tip="Thickness of the grip (mm).">?</span></label>
         <input type="number" id="dBot" value="15" min="1" step="0.5">
         <input type="number" id="dTap" value="20" min="1" step="0.5" class="mid-col">
         <input type="number" id="dTop" value="15" min="1" step="0.5">
@@ -153,20 +145,20 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
         <span></span><span>Guard</span><span class="mid-col">Mid</span><span>Pommel</span>
       </div>
       <div class="hole-row" style="grid-template-columns:52px 1fr 1fr 1fr;margin-bottom:7px">
-        <label style="font-size:9px;color:var(--text3)">type<span class="tip" tabindex="0" data-tip="Click to switch the cross section. SE = elliptical. HX = hexagonal. Enable Pointyness when using HX.">?</span></label>
+        <label style="font-size:9px;color:var(--text3)">type<span class="tip" tabindex="0" data-tip="SE = elliptical cross section. HX = hexagonal. Enable Pointyness for HX.">?</span></label>
         <button class="type-btn" id="type-bot" data-t="hx">HX</button>
         <button class="type-btn mid-col" id="type-tap" data-t="hx">HX</button>
         <button class="type-btn" id="type-top" data-t="se">SE</button>
       </div>
       <div class="hole-row" style="grid-template-columns:52px 1fr 1fr 1fr;align-items:start">
-        <label style="font-size:9px;color:var(--text3);padding-top:16px">Edge<br>Sharpness<span class="tip" tabindex="0" data-tip="Controls how sharp the edges are. 0% = round, 100% = sharp.">?</span></label>
+        <label style="font-size:9px;color:var(--text3);padding-top:16px">Edge<br>Sharpness<span class="tip" tabindex="0" data-tip="0% = round edges, 100% = sharp.">?</span></label>
         <div class="col-ctrl"><input type="range" id="param-bot-sl" min="0" max="100" value="45" step="1"><input type="number" id="param-bot" value="45" min="0" max="100" step="1"></div>
         <div class="col-ctrl mid-col"><input type="range" id="param-tap-sl" min="0" max="100" value="45" step="1"><input type="number" id="param-tap" value="45" min="0" max="100" step="1"></div>
         <div class="col-ctrl"><input type="range" id="param-top-sl" min="0" max="100" value="45" step="1"><input type="number" id="param-top" value="45" min="0" max="100" step="1"></div>
       </div>
       <div class="total-hint" style="margin:4px 0 8px">SE = Ellipse · HX = Hexagon</div>
       <div class="hole-row" style="grid-template-columns:52px 1fr 1fr 1fr;align-items:start">
-        <label style="font-size:9px;color:var(--text3);padding-top:16px">Pointy-<br>ness<span class="tip" tabindex="0" data-tip="How prominent the spine is on HX cross section (mm). 0 = flat rectangle. Depth - Pointyness × 2 = height of the flat section.">?</span></label>
+        <label style="font-size:9px;color:var(--text3);padding-top:16px">Pointy-<br>ness<span class="tip" tabindex="0" data-tip="Height of the spine on HX profile (mm). 0 = flat. Depth − Pointyness × 2 = flat section height.">?</span></label>
         <div class="col-ctrl"><input type="range" id="so-bot-sl" min="0" max="40" value="5" step="0.25"><input type="number" id="so-bot" value="5" min="0" step="0.25"></div>
         <div class="col-ctrl mid-col"><input type="range" id="so-tap-sl" min="0" max="40" value="5" step="0.25"><input type="number" id="so-tap" value="5" min="0" step="0.25"></div>
         <div class="col-ctrl"><input type="range" id="so-top-sl" min="0" max="40" value="0" step="0.25" disabled><input type="number" id="so-top" value="0" min="0" step="0.25" disabled></div>
@@ -176,28 +168,39 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
     <!-- ── BULGE ──────────────────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">Bulge</div>
-      <div class="row"><label>Guard side<span class="tip" tabindex="0" data-tip="Curve of the guard half. Negative = inward, positive = outward, 0 = straight.">?</span></label><input type="number" id="bulgeBef" value="-2" step="0.25"><span class="unit">mm</span></div>
-      <div class="row"><label>Pommel side<span class="tip" tabindex="0" data-tip="Curve of the pommel half. Negative = inward, positive = outward, 0 = straight.">?</span></label><input type="number" id="bulgeAft" value="-1.5" step="0.25"><span class="unit">mm</span></div>
+      <!-- "Guard side" label changes to "Full length" when taper is off -->
+      <div class="row">
+        <label id="bulge-bef-label">Guard side<span class="tip" tabindex="0" data-tip="Curve of the guard half. Negative = inward, positive = outward, 0 = straight. When taper is off this applies to the full length.">?</span></label>
+        <input type="number" id="bulgeBef" value="-2" step="0.25"><span class="unit">mm</span>
+      </div>
+      <!-- Pommel bulge — dims when taper is off -->
+      <div class="row" id="bulge-aft-row">
+        <label>Pommel side<span class="tip" tabindex="0" data-tip="Curve of the pommel half. Negative = inward, positive = outward, 0 = straight.">?</span></label>
+        <input type="number" id="bulgeAft" value="-1.5" step="0.25"><span class="unit">mm</span>
+      </div>
     </div>
 
     <!-- ── LENGTH ─────────────────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">Length</div>
-      <div class="row"><label>Total<span class="tip" tabindex="0" data-tip="Overall length of the grip (mm).">?</span></label><input type="number" id="totalLen" value="225" min="1" step="1"><span class="unit">mm</span></div>
+      <div class="row">
+        <label>Total<span class="tip" tabindex="0" data-tip="Overall length of the grip (mm).">?</span></label>
+        <input type="number" id="totalLen" value="225" min="1" step="1"><span class="unit">mm</span>
+      </div>
 
-      <!-- Taper toggle -->
+      <!-- Taper toggle — .taper-label scoped separately from .toggle-wrap -->
       <div class="taper-toggle-row" style="margin-top:8px">
-        <label>Taper (mid point)<span class="tip" tabindex="0" data-tip="When on, the grip tapers through a mid control point. When off, the outside lofts directly from guard to pommel — useful for straight or symmetrical grips.">?</span></label>
+        <span class="taper-label">Taper (mid point)<span class="tip" tabindex="0" data-tip="When on, the grip tapers through a mid control point. When off, outside lofts directly guard→pommel.">?</span></span>
         <label class="toggle-wrap">
           <input type="checkbox" id="taperOn" checked>
           <div class="toggle-track"></div>
         </label>
       </div>
 
-      <!-- Taper % slider — hidden when taper off -->
+      <!-- Taper % slider -->
       <div id="taper-pct-block" style="margin-top:2px">
         <div class="row" style="margin-bottom:4px">
-          <label>Taper point<span class="tip" tabindex="0" data-tip="Where the taper mid-point sits as a % of total length from the guard end.">?</span></label>
+          <label>Taper point<span class="tip" tabindex="0" data-tip="Where the mid control point sits as % of total length from the guard end.">?</span></label>
           <input type="number" id="taperPct" value="55" min="1" max="99" step="1"><span class="unit">%</span>
         </div>
         <input type="range" id="taperPct-sl" min="1" max="99" value="55" step="1">
@@ -212,16 +215,15 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
     <!-- ── INTERIOR HOLE ──────────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">Interior hole</div>
-      <!-- Hole mid column always visible regardless of taper toggle -->
       <div class="hole-hdr"><span>dim</span><span>guard</span><span>mid</span><span>pommel</span></div>
       <div class="hole-row">
-        <label>Width<span class="tip" tabindex="0" data-tip="Width of the interior hole (mm). Go a little bigger than needed to account for 3D printing tolerances.">?</span></label>
+        <label>Width<span class="tip" tabindex="0" data-tip="Width of the interior hole (mm). Size up slightly for 3D printing tolerances.">?</span></label>
         <input type="number" id="hwB" value="15" min="0" step="0.5">
         <input type="number" id="hwM" value="12" min="0" step="0.5">
         <input type="number" id="hwT" value="10" min="0" step="0.5">
       </div>
       <div class="hole-row">
-        <label>Height<span class="tip" tabindex="0" data-tip="Height of the interior hole (mm). Go a little bigger than needed to account for 3D printing tolerances.">?</span></label>
+        <label>Height<span class="tip" tabindex="0" data-tip="Height of the interior hole (mm). Size up slightly for 3D printing tolerances.">?</span></label>
         <input type="number" id="hdB" value="5" min="0" step="0.5">
         <input type="number" id="hdM" value="5" min="0" step="0.5">
         <input type="number" id="hdT" value="5" min="0" step="0.5">
@@ -232,8 +234,8 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
 
   <div class="btn-group">
     <div class="section-title" style="font-size:8px;line-height:1.5;letter-spacing:0;text-transform:none;color:var(--text3)">
-      This tool was made by a 3D printing and HEMA enthusiast — not a mathematician. Always check the file in a slicer before printing.<br><br>
-      This app is 100% free. If you paid for it, you got scammed. Donations appreciated!
+      Made by a HEMA enthusiast, not a mathematician. Always check in a slicer before printing.<br><br>
+      100% free. If you paid for it, you got scammed. Donations appreciated!
     </div>
     <button class="btn btn-primary" id="btnGen"><span class="btn-icon">▶</span>Generate geometry</button>
     <button class="btn btn-export" id="btnExp" disabled><span class="btn-icon">↓</span>Export STL</button>
@@ -253,7 +255,7 @@ input[type="range"]:disabled{opacity:.22;cursor:not-allowed;}
 </div>
 
 <script>
-// ── Three.js setup ───────────────────────────────────────────────────────────
+// ── Three.js setup ────────────────────────────────────────────────────────────
 const canvas   = document.getElementById('canvas3d');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -269,7 +271,7 @@ const rL = new THREE.DirectionalLight(0x00aacc, 0.6); rL.position.set(0.2,-1,-0.
 const mat = new THREE.MeshPhongMaterial({ color:0x2a5868, emissive:0x040e18, specular:0x88c8e0, shininess:110, side:THREE.DoubleSide });
 let meshObj = null;
 
-// ── Binary STL parser ────────────────────────────────────────────────────────
+// ── Binary STL parser ─────────────────────────────────────────────────────────
 function stlToMesh(buffer) {
   const dv    = new DataView(buffer);
   const count = dv.getUint32(80, true);
@@ -280,8 +282,8 @@ function stlToMesh(buffer) {
     const nx=dv.getFloat32(off,true), ny=dv.getFloat32(off+4,true), nz=dv.getFloat32(off+8,true);
     off += 12;
     for (let v = 0; v < 3; v++) {
-      const b = i*9 + v*3;
-      pos[b]  =dv.getFloat32(off,  true); pos[b+1]=dv.getFloat32(off+4,true); pos[b+2]=dv.getFloat32(off+8,true);
+      const b = i*9+v*3;
+      pos[b]=dv.getFloat32(off,true); pos[b+1]=dv.getFloat32(off+4,true); pos[b+2]=dv.getFloat32(off+8,true);
       nor[b]=nx; nor[b+1]=ny; nor[b+2]=nz;
       off += 12;
     }
@@ -305,7 +307,7 @@ function showGeometry(buffer, triCount) {
   document.getElementById('tri-count').textContent = triCount.toLocaleString()+' tri  ·  '+(triCount*50/1024).toFixed(1)+' KB';
 }
 
-// ── Camera orbit ─────────────────────────────────────────────────────────────
+// ── Camera orbit ──────────────────────────────────────────────────────────────
 let rotY=0.4, rotX=0.35, camDist=300, drag=false, px=0, py=0;
 function updateCam() {
   rotX=Math.max(-1.48,Math.min(1.48,rotX));
@@ -323,33 +325,34 @@ canvas.addEventListener('touchend',()=>{drag=false;});
 (function loop(){requestAnimationFrame(loop);const w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w||canvas.height!==h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}renderer.render(scene,camera);})();
 updateCam();
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
-const gv  = id => parseFloat(document.getElementById(id).value) || 0;
+// ── UI helpers ─────────────────────────────────────────────────────────────────
+const gv = id => parseFloat(document.getElementById(id).value) || 0;
 const setStatus = s => { document.getElementById('status').textContent = s; };
 
-// ── Taper toggle ──────────────────────────────────────────────────────────────
-const taperChk = document.getElementById('taperOn');
-const outerHdr = document.getElementById('outer-hdr');
-const outerWRow = document.getElementById('outer-w-row');
-const outerDRow = document.getElementById('outer-d-row');
+// ── Taper toggle ───────────────────────────────────────────────────────────────
+const taperChk      = document.getElementById('taperOn');
+const bulgeAftRow   = document.getElementById('bulge-aft-row');
+const bulgeBefLabel = document.getElementById('bulge-bef-label');
 
 function applyTaperUI() {
   const on = taperChk.checked;
-  // Dim mid columns via class on parent containers
-  [outerHdr, outerWRow, outerDRow,
-   document.querySelector('.section-title + div + div + div'), // cross-section section — handled by class below
-  ].forEach(el => { if (el) { on ? el.classList.remove('no-taper') : el.classList.add('no-taper'); } });
-  // Apply no-taper class to the whole sidebar-scroll so all .mid-col children dim
+  // Dim all .mid-col elements
   document.getElementById('sidebar-scroll').classList.toggle('no-taper', !on);
-  // Show/hide taper % block
-  document.getElementById('taper-pct-block').style.opacity = on ? '1' : '0.25';
-  document.getElementById('taper-pct-block').style.pointerEvents = on ? '' : 'none';
+  // Dim taper % block
+  const pctBlock = document.getElementById('taper-pct-block');
+  pctBlock.style.opacity      = on ? '1' : '0.25';
+  pctBlock.style.pointerEvents = on ? '' : 'none';
+  // Dim pommel bulge row when taper off (it has no effect)
+  bulgeAftRow.style.opacity      = on ? '1' : '0.25';
+  bulgeAftRow.style.pointerEvents = on ? '' : 'none';
+  // Relabel guard bulge
+  bulgeBefLabel.childNodes[0].textContent = on ? 'Guard side' : 'Full length';
 }
 
 taperChk.addEventListener('change', () => { applyTaperUI(); schedRegen(); });
-applyTaperUI(); // set initial state
+applyTaperUI();
 
-// ── Profile type toggles ──────────────────────────────────────────────────────
+// ── Profile type toggles ───────────────────────────────────────────────────────
 const profType = { bot:'hx', tap:'hx', top:'se' };
 function toggleType(pt) {
   profType[pt] = profType[pt]==='se' ? 'hx' : 'se';
@@ -358,13 +361,12 @@ function toggleType(pt) {
   btn.setAttribute('data-t', profType[pt]);
   btn.textContent = profType[pt].toUpperCase();
   ['so-'+pt,'so-'+pt+'-sl'].forEach(id=>{ document.getElementById(id).disabled=!isHx; });
-  const psl = document.getElementById('param-'+pt+'-sl');
-  isHx ? psl.classList.add('sl-hx') : psl.classList.remove('sl-hx');
+  document.getElementById('param-'+pt+'-sl').classList.toggle('sl-hx', isHx);
   schedRegen();
 }
 ['bot','tap','top'].forEach(pt=>{ document.getElementById('type-'+pt).addEventListener('click',()=>toggleType(pt)); });
 
-// ── Slider↔number pairs ───────────────────────────────────────────────────────
+// ── Slider↔number pairs ────────────────────────────────────────────────────────
 function linkPair(slId, nbId, cb) {
   const sl=document.getElementById(slId), nb=document.getElementById(nbId);
   sl.addEventListener('input',()=>{ nb.value=sl.value; if(cb)cb(); schedRegen(); });
@@ -379,7 +381,7 @@ linkPair('taperPct-sl','taperPct',updateTaperHint);
   document.getElementById(id).addEventListener('input',()=>{ if(id==='totalLen')updateTaperHint(); schedRegen(); });
 });
 
-// ── Debounced regen → API call ────────────────────────────────────────────────
+// ── Debounced regen → API call ─────────────────────────────────────────────────
 let regenTimer=null, lastStlBuffer=null;
 function schedRegen(){ clearTimeout(regenTimer); regenTimer=setTimeout(doRegen,150); }
 
@@ -387,7 +389,6 @@ async function doRegen() {
   const noTaper  = !taperChk.checked;
   const totalLen = Math.max(1, gv('totalLen'));
   const taperPct = Math.max(1, Math.min(99, gv('taperPct')));
-  // When taper is off, lBef = half the total length — anchors the inner hole midpoint
   const lBef = noTaper ? totalLen / 2 : totalLen * taperPct / 100;
   const lAft = totalLen - lBef;
 
