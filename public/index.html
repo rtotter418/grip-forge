@@ -288,7 +288,7 @@ const gv = id => parseFloat(document.getElementById(id).value) || 0;
 const setStatus = s => { document.getElementById('status').textContent = s; };
 
 // Profile types
-const profType = { bot:'se', tap:'se', top:'se' };
+const profType = { bot:'hx', tap:'hx', top:'se' };
 function toggleType(pt) {
   profType[pt] = profType[pt]==='se' ? 'hx' : 'se';
   const isHx = profType[pt]==='hx';
