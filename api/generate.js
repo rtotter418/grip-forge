@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PROF_PTS = 48;
+import zlib from 'zlib';
 
 function superEllipse(w, h, n) {
   const a = w/2, b = h/2, e = 2/n, pts = [];
@@ -276,13 +277,12 @@ export default function handler(req, res) {
 
     const { tris, clamped } = buildGrip(p);
     const stl = toSTL(tris);
-
     const totalLen = (p.lBef + p.lAft).toFixed(0);
-    res.setHeader('Content-Type',        'application/octet-stream');
+    res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="grip_${totalLen}mm.stl"`);
-    res.setHeader('X-Triangle-Count',    String(tris.length));
-    res.setHeader('X-Hole-Clamped',      String(clamped));
-    import zlib from 'zlib';
+    res.setHeader('X-Triangle-Count', String(tris.length));
+    res.setHeader('X-Hole-Clamped', String(clamped));
+
     zlib.gzip(stl, (err, compressed) => {
       if (err) { res.status(500).json({ error: 'compression failed' }); return; }
       res.setHeader('Content-Encoding', 'gzip');
