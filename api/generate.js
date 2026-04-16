@@ -1,9 +1,10 @@
+import zlib from 'zlib';
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  GRIP FORGE  —  Geometry Engine
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PROF_PTS = 48;
-import zlib from 'zlib';
 
 function superEllipse(w, h, n) {
   const a = w/2, b = h/2, e = 2/n, pts = [];
@@ -169,6 +170,30 @@ function buildGrip(p) {
   const top = { w:p.wTop, d:p.dTop, type:p.typeTop, param:p.paramTop, so:p.soTop };
 
   function outerAt(z) {
+    // ── No-taper mode: single segment guard→pommel ────────────────────────────
+    if (p.noTaper) {
+      const t = totalLen > 0 ? z / totalLen : 0;
+      let w = bot.w + (top.w - bot.w) * t;
+      let d = bot.d + (top.d - bot.d) * t;
+      // Each bulge applies to its half of the grip
+      const bulge  = t < 0.5 ? p.bulgeBef : p.bulgeAft;
+      const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+      const bw = bulge * Math.sin(Math.PI * localT);
+      const bd = (bot.d > 0 && bot.w > 0) ? bw * (bot.d / bot.w) : bw;
+      w += bw; d += bd;
+      const so    = bot.so    + (top.so    - bot.so   ) * t;
+      const param = bot.param + (top.param - bot.param) * t;
+      let prof;
+      if (bot.type === top.type) {
+        prof = makeProf(w, d, bot.type, param, so);
+      } else {
+        prof = lerpPro(makeProf(w, d, bot.type, bot.param, bot.so),
+                       makeProf(w, d, top.type, top.param, top.so), t);
+      }
+      return { w, d, so, prof };
+    }
+
+    // ── Normal two-segment mode ───────────────────────────────────────────────
     const inLower = z <= p.lBef;
     const t = inLower ? (p.lBef>0?z/p.lBef:0) : (p.lAft>0?(z-p.lBef)/p.lAft:1);
     const A = inLower ? bot : tap, B = inLower ? tap : top;
@@ -188,6 +213,8 @@ function buildGrip(p) {
     return { w, d, so, prof };
   }
 
+  // Inner hole: always 3-point (guard → mid → pommel).
+  // lBef is the midpoint anchor — in no-taper mode the frontend sets this to totalLen/2.
   function innerAt(z) {
     const t = z<=p.lBef ? (p.lBef>0?z/p.lBef:0) : (p.lAft>0?(z-p.lBef)/p.lAft:1);
     if (z<=p.lBef) return [p.hwB+(p.hwM-p.hwB)*t, p.hdB+(p.hdM-p.hdB)*t];
@@ -258,7 +285,6 @@ function toSTL(tris) {
 
 // ── Serverless handler ────────────────────────────────────────────────────────
 export default function handler(req, res) {
-  // CORS – allow the same origin (adjust if you add a custom domain)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -267,26 +293,27 @@ export default function handler(req, res) {
 
   try {
     const p = req.body;
-
-    // Basic validation
     const check = (cond, msg) => { if (!cond) throw new Error(msg); };
-    check(p.lBef > 0 && p.lAft > 0,          'Length segments must be > 0');
-    check(p.wBot > 0 && p.dBot > 0,           'Bottom dimensions must be > 0');
-    check(p.wTap > 0 && p.dTap > 0,           'Taper dimensions must be > 0');
-    check(p.wTop > 0 && p.dTop > 0,           'Top dimensions must be > 0');
+    check(p.lBef > 0 && p.lAft > 0,  'Length segments must be > 0');
+    check(p.wBot > 0 && p.dBot > 0,  'Guard dimensions must be > 0');
+    check(p.wTop > 0 && p.dTop > 0,  'Pommel dimensions must be > 0');
+    if (!p.noTaper) {
+      check(p.wTap > 0 && p.dTap > 0, 'Mid dimensions must be > 0');
+    }
 
     const { tris, clamped } = buildGrip(p);
     const stl = toSTL(tris);
+
     const totalLen = (p.lBef + p.lAft).toFixed(0);
-    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Type',        'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="grip_${totalLen}mm.stl"`);
-    res.setHeader('X-Triangle-Count', String(tris.length));
-    res.setHeader('X-Hole-Clamped', String(clamped));
+    res.setHeader('X-Triangle-Count',    String(tris.length));
+    res.setHeader('X-Hole-Clamped',      String(clamped));
 
     zlib.gzip(stl, (err, compressed) => {
       if (err) { res.status(500).json({ error: 'compression failed' }); return; }
       res.setHeader('Content-Encoding', 'gzip');
-      res.setHeader('Content-Length', compressed.length);
+      res.setHeader('Content-Length',   compressed.length);
       res.status(200).send(compressed);
     });
   } catch (e) {
